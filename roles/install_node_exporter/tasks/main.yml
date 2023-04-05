@@ -1,0 +1,49 @@
+---
+- name: Create remote_tmp directory with appropriate permissions
+  file:
+    path: "{{ ansible_env.HOME }}/.ansible/tmp"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0755
+
+- name: Install required packages
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - wget
+    - tar
+
+- name: Download and install node_exporter
+  block:
+    - name: Download node_exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.{{ ansible_system | lower }}-amd64.tar.gz"
+        dest: "/tmp/node_exporter.tar.gz"
+
+    - name: Unarchive node_exporter
+      unarchive:
+        src: "/tmp/node_exporter.tar.gz"
+        dest: "/opt/"
+        remote_src: yes
+        creates: "/opt/node_exporter-1.5.0.{{ ansible_system | lower }}-amd64/node_exporter"
+
+    - name: Create node_exporter service
+      template:
+        src: node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        mode: 0644
+  when: "'linux' in ansible_system | lower"
+
+- name: Start and enable node_exporter service
+  systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+
+- name: Configure Prometheus to scrape node_exporter targets
+  import_tasks: configure_prometheus.yml
+  delegate_to: zbx.mtx.lan
+  run_once: true
+

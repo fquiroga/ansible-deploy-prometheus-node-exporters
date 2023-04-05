@@ -1,0 +1,7 @@
+---
+- name: Install and configure node_exporter on target hosts
+  hosts: all
+  gather_facts: yes
+  become: yes
+  roles:
+    - install_node_exporter

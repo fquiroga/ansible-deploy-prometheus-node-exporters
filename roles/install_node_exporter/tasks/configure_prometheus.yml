@@ -1,0 +1,11 @@
+- name: Add the target host to Prometheus configuration
+  ansible.builtin.blockinfile:
+    path: /etc/prometheus/prometheus.yml
+    insertafter: "scrape_configs:"
+    block: |
+      - job_name: 'node_exporter'
+        static_configs:
+        - targets: ['{{ inventory_hostname }}:9100']
+  delegate_to: zbx.mtx.lan
+  become: yes
+  become_user: fquiroga
