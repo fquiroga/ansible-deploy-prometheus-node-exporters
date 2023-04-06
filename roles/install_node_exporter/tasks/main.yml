@@ -44,6 +44,6 @@
 
 - name: Configure Prometheus to scrape node_exporter targets
   import_tasks: configure_prometheus.yml
-  delegate_to: zbx.mtx.lan
+  delegate_to: prometheus_server
   run_once: true
 
